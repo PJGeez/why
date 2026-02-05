@@ -1,0 +1,28 @@
+# Binaries for programs
+*.exe
+*.dll
+*.so
+*.dylib
+*.wasm
+*.o
+
+# Compiled Go packages
+*.a
+
+# Test binary, generated with `go test -c`
+*.test
+
+# Output of the go generate command
+*.go
+
+# IDEs and editors
+.idea/
+.vscode/
+
+# Dependency directories
+vendor/
+
+# Miscellaneous
+*~
+*.log
+local.
