@@ -13,7 +13,6 @@
 *.test
 
 # Output of the go generate command
-*.go
 
 # IDEs and editors
 .idea/
