@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 )
+import "git-from-scratch/internal/repo"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -22,36 +23,22 @@ func main() {
 
 
 func runInit() {
-	repoPath := ".why"
-
-	//checking if the repo already exists
-	if _, err := os.Stat(repoPath); err == nil {
-		fmt.Println("why repository already exists")
+	cwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	//creating directory structures
-	dirs := []string{
-		".why",
-		".why/objects",
-		".why/refs",
-	}
-
-	for _, dir := range dirs {
-		if err := os.Mkdir(dir, 0755); err!=nil {
-			fmt.Println("error creating dir %s: %v\n", dir, err)
-			os.Exit(1)
-		}
-	}
-
-	//create HEAD file
-	headPath := ".why/HEAD"
-	headContent := []byte("ref: refs/head/master\n")
-
-	if err := os.WriteFile(headPath, headContent, 0644); err != nil {
-		fmt.Println("error writing HEAD: %v\n",err)
+	repo, err := repo.NewRepository(cwd)
+	if err != nil{
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Initialize an empty why repository in .why")
+	if err:=repo.Init(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Initialized an empty why repository in .why")
 }
