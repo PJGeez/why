@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"git-from-scratch/cmd"
+	"git-from-scratch/internal/repo"
 	"os"
 )
-import "git-from-scratch/internal/repo"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -16,8 +17,17 @@ func main() {
 	switch os.Args[1] {
 	case "init":
 		runInit()
+	case "hash-object":
+		if len(os.Args) < 3 {
+			fmt.Println("usage: hash-object <file>")
+			return
+		}
+		err := cmd.HashObject(".", os.Args[2])
+		if err != nil {
+			fmt.Println("error: ", err)
+		}
 	default:
-		fmt.Println("unknown command: %s\n", os.Args[1])
+		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)
 	}
 }

@@ -2,7 +2,6 @@ package object
 
 import (
 	"fmt"
-	"bytes"
 )
 
 type Blob struct {

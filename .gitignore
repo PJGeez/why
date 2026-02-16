@@ -1,27 +1,7 @@
-# Binaries for programs
-*.exe
-*.dll
-*.so
-*.dylib
-*.wasm
-*.o
+# Custom git directory
+.why/
 
-# Compiled Go packages
-*.a
-
-# Test binary, generated with `go test -c`
-*.test
-
-# Output of the go generate command
-
-# IDEs and editors
+# Test files
+test.txt
 .idea/
 .vscode/
-
-# Dependency directories
-vendor/
-
-# Miscellaneous
-*~
-*.log
-local.

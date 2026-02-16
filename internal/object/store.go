@@ -21,12 +21,12 @@ func WriteObject(repoPath string, data []byte) (string, error) {
 	if err != nil {
 		return "",err
 	}
-	defer f.close()
+	defer f.Close()
 
 	writer := zlib.NewWriter(f)
-	defer writer.close()
+	defer writer.Close()
 
-	_, err := writer.Write(data)
+	_, err = writer.Write(data)
 	if err != nil {
 		return "", err
 	}
