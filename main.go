@@ -12,6 +12,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	//command registry...
 	switch os.Args[1] {
 	case "init":
 		runInit()
@@ -21,7 +22,7 @@ func main() {
 	}
 }
 
-
+// soft coding the hardcoded directory values..
 func runInit() {
 	cwd, err := os.Getwd()
 	if err != nil {
