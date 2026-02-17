@@ -26,6 +26,15 @@ func main() {
 		if err != nil {
 			fmt.Println("error: ", err)
 		}
+	case "cat-file":
+		if len(os.Args) < 3 {
+			fmt.Println("usage: cat-file <hash>")
+			return
+		}
+		err := cmd.CatFile(".", os.Args[2])
+		if err != nil {
+			fmt.Println("error: ", err)
+		}
 	default:
 		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)
