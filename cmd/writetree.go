@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"git-from-scratch/internal/object"
+	"sort"
 )
 
 func WriteTree(repoPath string) error {
@@ -41,6 +42,10 @@ func WriteTree(repoPath string) error {
 
 		entries = append(entries, entry)
 	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name < entries[j].Name
+	})
 
 	tree := object.Tree{Entries: entries}
 	treeData, err := tree.Serialize()
