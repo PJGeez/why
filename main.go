@@ -35,6 +35,11 @@ func main() {
 		if err != nil {
 			fmt.Println("error: ", err)
 		}
+	case "write-tree":
+		err := cmd.WriteTree(".")
+		if err != nil {
+			fmt.Println("error: ", err)
+		}
 	default:
 		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)
