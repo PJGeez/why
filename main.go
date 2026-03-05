@@ -40,6 +40,15 @@ func main() {
 		if err != nil {
 			fmt.Println("error: ", err)
 		}
+	case "commit" :
+		if len(os.Args)<4 {
+			fmt.Println("usage: commit <tree_hash> <message>")
+			return
+		}
+		err := cmd.Commit(".", os.Args[2], "", os.Args[3])
+		if err != nil {
+			fmt.Println("error: ", err)
+		}
 	default:
 		fmt.Printf("unknown command: %s\n", os.Args[1])
 		os.Exit(1)

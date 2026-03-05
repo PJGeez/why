@@ -19,37 +19,34 @@ func CatFile(repoPath, hash string) error {
 	fmt.Printf("Type: %s\n", parsed.Type)
 	fmt.Printf("Size: %d\n", parsed.Size)
 	fmt.Println("Content:")
-	// fmt.Println(string(parsed.Content))
 
-	if parsed.Type == "tree"{
+	if parsed.Type == "tree" {
 		data := parsed.Content
-
 		i := 0
-
 		for i < len(data) {
-			start := i //Read mode
 
-			for data[i] != ' '{
+			start := i
+			for data[i] != ' ' {
 				i++
 			}
 			mode := string(data[start:i])
-			i++ //skip space
+			i++
 
 			start = i
-			for data[i] != 0{
+			for data[i] != 0 {
 				i++
 			}
-
-			name := string(data[start: i])
-			i++ //skip null byte
+			name := string(data[start:i])
+			i++
 
 			hashBytes := data[i : i+20]
 			hash := fmt.Sprintf("%x", hashBytes)
-			i+=20
+			i += 20
 
 			fmt.Printf("%s %s %s\n", mode, hash, name)
 		}
-		//the display will be like "100644 <hash> a.txt" ...
+	} else {
+		fmt.Print(string(parsed.Content))
 	}
 
 	return nil
