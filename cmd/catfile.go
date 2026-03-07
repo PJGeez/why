@@ -1,52 +1,63 @@
 package cmd
 
 import (
+	"bytes"
+	"compress/zlib"
 	"fmt"
-	"git-from-scratch/internal/object"
+	"os"
+	"strings"
 )
 
-func CatFile(repoPath, hash string) error {
-	data, err := object.ReadObject(repoPath, hash)
+func CatFile(repoPath, flag, hash string) error {
+	dir := hash[:2]
+	file := hash[2:]
+
+	path := repoPath + "/.why/objects" + dir + "/" + file
+
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
-	parsed, err := object.ParseObject(data)
-	if err != nil {
+	reader, err := zlib.NewReader(bytes.NewReader(data))
+	if err!= nil {
 		return err
 	}
 
-	fmt.Printf("Type: %s\n", parsed.Type)
-	fmt.Printf("Size: %d\n", parsed.Size)
-	fmt.Println("Content:")
+	defer reader.Close()
 
-	if parsed.Type == "tree" {
-		data := parsed.Content
-		i := 0
-		for i < len(data) {
+	decompressed := new(bytes.Buffer)
+	_, err = decompressed.ReadFrom(reader)
+	if err!= nil {
+		return err
+	}
 
-			start := i
-			for data[i] != ' ' {
-				i++
-			}
-			mode := string(data[start:i])
-			i++
+	content := decompressed.Bytes()
+	nullIndex := bytes.IndexByte(content, 0)
+	header := string(content[:nullIndex])
+	body := content[nullIndex+1:]
 
-			start = i
-			for data[i] != 0 {
-				i++
-			}
-			name := string(data[start:i])
-			i++
+	parts := strings.Split(header, " ")
+	objType := parts[0]
+	size := parts[1]
 
-			hashBytes := data[i : i+20]
-			hash := fmt.Sprintf("%x", hashBytes)
-			i += 20
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid object header")
+	}
 
-			fmt.Printf("%s %s %s\n", mode, hash, name)
-		}
-	} else {
-		fmt.Print(string(parsed.Content))
+	switch flag {
+
+	case "-p":
+		fmt.Printf("%s", body)
+
+	case "-t":
+		fmt.Println(objType)
+
+	case "-s":
+		fmt.Println(size)
+
+	default:
+		return fmt.Errorf("unknown flag %s", flag)
 	}
 
 	return nil
