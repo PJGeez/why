@@ -15,9 +15,9 @@ type Commit struct {
 func (c *Commit) Serialize() []byte {
 	now := time.Now()
 	timestamp := now.Unix()
-	
+
 	_, offsetSeconds := now.Zone()
-	
+
 	offsetHours := offsetSeconds / 3600
 	offsetMinutes := (offsetSeconds % 3600) / 60
 	

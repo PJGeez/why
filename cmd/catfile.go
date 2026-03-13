@@ -41,10 +41,6 @@ func CatFile(repoPath, flag, hash string) error {
 	objType := parts[0]
 	size := parts[1]
 
-	if len(parts) != 2 {
-		return fmt.Errorf("invalid object header")
-	}
-
 	switch flag {
 
 	case "-p":

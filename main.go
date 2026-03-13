@@ -21,13 +21,12 @@ func main() {
 	case "init":
 		runInit()
 
-
 	case "hash-object":
-		err := cmd.HashObject(".", os.Args[2:])
+		hash, err := cmd.HashObject(".", os.Args[2:])
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-
+		fmt.Println(hash)
 
 	case "cat-file":
 		if len(os.Args) < 4 {
@@ -38,19 +37,16 @@ func main() {
 		flag := os.Args[2]
 		hash := os.Args[3]
 
-
 		err := cmd.CatFile(".", flag, hash)
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-
 
 	case "write-tree":
 		err := cmd.WriteTree(".")
 		if err != nil {
 			fmt.Println("error:", err)
 		}
-
 
 	case "commit":
 		if len(os.Args) < 4 {
@@ -63,6 +59,15 @@ func main() {
 			fmt.Println("error:", err)
 		}
 
+	case "add":
+		if len(os.Args) < 3{
+			fmt.Println("usage: why add <file1> <file2> ...")
+			return
+		}
+		err := cmd.Add(".", os.Args[2:])
+		if err != nil {
+			fmt.Println("error: ", err)
+		}
 
 	default:
 		fmt.Printf("unknown command: %s\n", command)

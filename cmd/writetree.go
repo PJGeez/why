@@ -2,44 +2,29 @@ package cmd
 
 import (
 	"fmt"
-	"os"
+	"git-from-scratch/internal/index"
 	"git-from-scratch/internal/object"
 	"sort"
 )
 
 func WriteTree(repoPath string) error {
-	files, err := os.ReadDir(repoPath)
-	if err!= nil {
-		return err
+	idx, err := index.ReadIndex(repoPath)
+	if err != nil {
+		return fmt.Errorf("could not read index: %w", err)
+	}
+
+	if len(idx.Entries) == 0 {
+		return fmt.Errorf("nothing to commit work-tree is clean")
 	}
 
 	var entries []object.TreeEntry
 
-	for _, file := range files {
-		if file.IsDir() || file.Name() == ".git" {
-			continue
+	for _, idxEntry := range idx.Entries {
+		entry := object.TreeEntry{
+			Mode: idxEntry.Mode,
+			Name: idxEntry.Path,
+			Hash: idxEntry.Hash,
 		}
-
-		content, err := os.ReadFile(file.Name())
-		if err != nil {
-			return err
-		}
-
-		blob := object.Blob{Content: content}
-		serialized := blob.Serialize()
-
-		hash, err := object.WriteObject(repoPath, serialized)
-		if err != nil {
-			return err
-		}
-
-		//hard coded values
-		entry := object.TreeEntry {
-			Mode: "100644",
-			Name: file.Name(),
-			Hash: hash,
-		}
-
 		entries = append(entries, entry)
 	}
 
@@ -50,12 +35,12 @@ func WriteTree(repoPath string) error {
 	tree := object.Tree{Entries: entries}
 	treeData, err := tree.Serialize()
 	if err != nil {
-		return err
+		return fmt.Errorf("error serializing tree: %w", err)
 	}
 
 	treeHash, err := object.WriteObject(repoPath, treeData)
 	if err != nil {
-		return err
+		return fmt.Errorf("error writing tree object: %w", err)
 	}
 	fmt.Println(treeHash)
 	return nil

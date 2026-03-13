@@ -9,23 +9,22 @@ import (
 	"os"
 )
 
-
-func HashObject(repoPath string, args []string) error {
+func HashObject(repoPath string, args []string) (string, error) {
 
 	if len(args) < 2 {
-		return fmt.Errorf("usage: why hash-object -w <file>")
+		return "", fmt.Errorf("usage: why hash-object -w <file>")
 	}
 
 	flag := args[0]
 	file := args[1]
 
 	if flag != "-w" {
-		return fmt.Errorf("only -w supported")
+		return "",fmt.Errorf("only -w supported")
 	}
 
 	data, err := os.ReadFile(file)
 	if err != nil {
-		return err
+		return "",err
 	}
 
 	blob := buildBlob(data)
@@ -34,17 +33,17 @@ func HashObject(repoPath string, args []string) error {
 
 	compressed, err := compressData(blob)
 	if err != nil {
-		return err
+		return "",err
 	}
 
 	err = writeObject(hash, compressed)
 	if err != nil {
-		return err
+		return "",err
 	}
 
 	fmt.Println(hash)
 
-	return nil
+	return hash,nil
 }
 
 
