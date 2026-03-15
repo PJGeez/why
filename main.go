@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"git-from-scratch/cmd"
 	"git-from-scratch/internal/repo"
+	"git-from-scratch/cmd"
 	"os"
 )
 
@@ -45,6 +45,12 @@ func main() {
 	case "write-tree":
 		err := cmd.WriteTree(".")
 		if err != nil {
+			fmt.Println("error:", err)
+		}
+
+	case "status":
+		err := cmd.Status(".")
+		if err!=nil{
 			fmt.Println("error:", err)
 		}
 
