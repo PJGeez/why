@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Repository struct {
@@ -39,7 +40,33 @@ func (r *Repository) Init() error {
 	}
 
 	headpath := filepath.Join(r.GitDir, "HEAD")
-	headContent := []byte("ref: refs/head/master\n")
+	headContent := []byte("ref: refs/heads/master\n")
 
 	return os.WriteFile(headpath, headContent, 0644)
+}
+
+func (r *Repository) GetHeadCommit() (string, error){
+	headPath := filepath.Join(r.GitDir, "HEAD")
+	data, err := os.ReadFile(headPath)
+	if err != nil {
+		return "", err
+	}
+
+	content := strings.TrimSpace(string(data))
+
+	const refPrefix = "ref: "
+	if strings.HasPrefix(content, refPrefix) {
+		refPath := strings.TrimSpace(strings.TrimPrefix(content, refPrefix))
+		fullRefPath := filepath.Join(r.GitDir, refPath)
+		refData, err := os.ReadFile(fullRefPath)
+		if err != nil {
+			if os.IsNotExist(err){
+				return "", nil
+			}
+			return "", err
+		}
+		return strings.TrimSpace(string(refData)), nil
+	}
+	// detached HEAD contains the hash directly
+	return content, nil
 }
