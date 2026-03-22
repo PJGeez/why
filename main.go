@@ -65,6 +65,12 @@ func main() {
 			fmt.Println("error:", err)
 		}
 
+	case "log":
+		err := cmd.Log(".")
+		if err != nil {
+			fmt.Println("error: ", err)
+		}
+
 	case "add":
 		if len(os.Args) < 3{
 			fmt.Println("usage: why add <file1> <file2> ...")
@@ -74,6 +80,25 @@ func main() {
 		if err != nil {
 			fmt.Println("error: ", err)
 		}
+
+	case "debug-head":
+		cwd, err := os.Getwd()
+		if err != nil {
+			fmt.Println("error:", err)
+			return
+		}
+
+		repository, err := repo.NewRepository(cwd)
+		if err != nil {
+			fmt.Println("error:", err)
+			return
+		}
+
+		hash, err := repository.GetHeadCommit()
+		if err != nil {
+			fmt.Println("error:", err)
+		}
+		fmt.Println(hash)
 
 	default:
 		fmt.Printf("unknown command: %s\n", command)
