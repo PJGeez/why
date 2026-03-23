@@ -12,6 +12,7 @@ type Repository struct {
 	GitDir string
 }
 
+
 func NewRepository(worktree string) (*Repository, error){
 	gitDir := filepath.Join(worktree, ".why")
 
@@ -24,6 +25,7 @@ func NewRepository(worktree string) (*Repository, error){
 		GitDir: gitDir,
 	}, nil
 }
+
 
 func (r *Repository) Init() error {
 	dirs := []string {
@@ -44,6 +46,7 @@ func (r *Repository) Init() error {
 
 	return os.WriteFile(headpath, headContent, 0644)
 }
+
 
 func (r *Repository) GetHeadCommit() (string, error){
 	headPath := filepath.Join(r.GitDir, "HEAD")
@@ -69,4 +72,31 @@ func (r *Repository) GetHeadCommit() (string, error){
 	}
 	// detached HEAD contains the hash directly
 	return content, nil
+}
+
+
+func (r *Repository) GetCurrentBranch() (string, error) {
+	headPath := filepath.Join(r.GitDir, "HEAD")
+	data, err := os.ReadFile(headPath)
+	if err != nil {
+		return "", err
+	}
+
+	content := strings.TrimSpace(string(data))
+	if strings.HasPrefix(content, "ref: refs/heads/") {
+		return strings.TrimPrefix(content, "ref: refs/heads/"), nil
+	}
+
+	return "", fmt.Errorf("detached HEAD or unknown branch format")
+}
+
+
+func (r *Repository) SetBranchCommit(branch string, commitHash string) error {
+	refPath := filepath.Join(r.GitDir, "refs", "heads", branch)
+
+	if err := os.MkdirAll(filepath.Dir(refPath), 0755); err!=nil {
+		return err
+	}
+
+	return os.WriteFile(refPath, []byte(commitHash+"\n"), 0644)
 }
