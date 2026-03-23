@@ -7,14 +7,14 @@ import (
 	"sort"
 )
 
-func WriteTree(repoPath string) error {
+func WriteTree(repoPath string) (string, error) {
 	idx, err := index.ReadIndex(repoPath)
 	if err != nil {
-		return fmt.Errorf("could not read index: %w", err)
+		return "", fmt.Errorf("could not read index: %w", err)
 	}
 
 	if len(idx.Entries) == 0 {
-		return fmt.Errorf("nothing to commit work-tree is clean")
+		return "", fmt.Errorf("nothing to commit work-tree is clean")
 	}
 
 	var entries []object.TreeEntry
@@ -35,13 +35,13 @@ func WriteTree(repoPath string) error {
 	tree := object.Tree{Entries: entries}
 	treeData, err := tree.Serialize()
 	if err != nil {
-		return fmt.Errorf("error serializing tree: %w", err)
+		return "", fmt.Errorf("error serializing tree: %w", err)
 	}
 
 	treeHash, err := object.WriteObject(repoPath, treeData)
 	if err != nil {
-		return fmt.Errorf("error writing tree object: %w", err)
+		return "", fmt.Errorf("error writing tree object: %w", err)
 	}
 	fmt.Println(treeHash)
-	return nil
+	return treeHash, nil
 }
