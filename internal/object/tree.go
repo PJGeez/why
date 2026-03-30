@@ -32,3 +32,36 @@ func (t *Tree) Serialize() ([]byte, error) {
 	header := fmt.Sprintf("tree %d\x00", len(content))
 	return append([]byte(header), content...), nil
 }
+
+func ParseTree(data []byte)(*Tree, error){
+	var entries []TreeEntry
+	i:=0
+	for i<=len(data){
+
+		//space between the mode and the filename
+		spaceIndex:= bytes.IndexByte(data[i:], ' ')
+		if spaceIndex == -1 {
+			break
+		}
+		mode := string(data[i : i+spaceIndex])
+		i += spaceIndex+1
+		
+		//the null character after the filename
+		nullIndex:= bytes.IndexByte(data[i:], 0)
+		if nullIndex == -1 {
+			break
+		}
+		name := string(data[i : i+nullIndex])
+		i+= nullIndex+1
+
+		hashBytes := data[i : i+20]
+		hashHex := hex.EncodeToString(hashBytes)
+		i += 20
+
+		entries = append(entries, TreeEntry {
+			Mode: mode,
+			Name: name,
+			Hash: hashHex,
+		})
+	}
+	return &Tree{Entries: entries}, nil
