@@ -103,17 +103,31 @@ func (r *Repository) SetBranchCommit(branch string, commitHash string) error {
 
 
 func (r *Repository) ResolveTarget(target string) (string, bool, error) {
-	// checking if the branch is already present in the ref/heads
-	refPath := filepath.Join(r.GitDir, "ref", "heads", target)
-	if data, err := os.ReadFile(refPath); err == nil {
-		return strings.TrimSpace(string(data)), true, nil
-	}
-	
-	if len(target) == 40 {
-		return target, false, nil
-	}
+        // checking if the branch is already present in the refs/heads
+        refPath := filepath.Join(r.GitDir, "refs", "heads", target)
+        if data, err := os.ReadFile(refPath); err == nil {
+                return strings.TrimSpace(string(data)), true, nil
+        }
 
-	return "", false, fmt.Errorf("target '%s' is not a valid branch or a commit hash", target)
+        if len(target) == 40 {
+                return target, false, nil
+        }
+
+        return "", false, fmt.Errorf("target '%s' is not a valid branch or a commit hash", target)
 }
 
+
+// UpdateHead function will cause the checkout possible it will point to the targeted branch
+func (r* Repository) UpdateHead(target string, isBranch bool) error {
+        headPath := filepath.Join(r.GitDir, "HEAD")
+        var content string
+
+        if isBranch {
+                content = fmt.Sprintf("ref: refs/heads/%s\n", target)
+        } else {
+                content = target + "\n"
+        }
+
+        return os.WriteFile(headPath, []byte(content), 0644)
+}
 
