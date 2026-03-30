@@ -100,3 +100,20 @@ func (r *Repository) SetBranchCommit(branch string, commitHash string) error {
 
 	return os.WriteFile(refPath, []byte(commitHash+"\n"), 0644)
 }
+
+
+func (r *Repository) ResolveTarget(target string) (string, bool, error) {
+	// checking if the branch is already present in the ref/heads
+	refPath := filepath.Join(r.GitDir, "ref", "heads", target)
+	if data, err := os.ReadFile(refPath); err == nil {
+		return strings.TrimSpace(string(data)), true, nil
+	}
+	
+	if len(target) == 40 {
+		return target, false, nil
+	}
+
+	return "", false, fmt.Errorf("target '%s' is not a valid branch or a commit hash", target)
+}
+
+
