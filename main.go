@@ -72,6 +72,16 @@ func main() {
 				fmt.Println("error: ", err)
 			}
 
+		case "checkout":
+			if len(os.Args) < 3 {
+				fmt.Println("usage: why checkout <target>")
+				return
+			}
+			target := os.Args[2]
+			err := cmd.Checkout(".", target)
+			if err != nil {
+				fmt.Println("error:", err)
+			}
 		case "add":
 			if len(os.Args) < 3{
 				fmt.Println("usage: why add <file1> <file2> ...")
