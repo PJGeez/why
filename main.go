@@ -82,6 +82,12 @@ func main() {
 			if err != nil {
 				fmt.Println("error:", err)
 			}
+
+		case "branch":
+			err := cmd.Branch(".", os.Args[2:])
+			if err != nil {
+				fmt.Println("error:", err)
+			}
 		case "add":
 			if len(os.Args) < 3{
 				fmt.Println("usage: why add <file1> <file2> ...")
