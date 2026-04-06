@@ -131,3 +131,33 @@ func (r* Repository) UpdateHead(target string, isBranch bool) error {
         return os.WriteFile(headPath, []byte(content), 0644)
 }
 
+
+func (r* Repository) CreateBranch(name string, commitHash string) error {
+	branchPath := filepath.Join(r.GitDir, "refs", "heads", name)
+
+	if _, err := os.Stat(branchPath); err == nil {
+		return fmt.Errorf("branch %s already exists", name)
+	}
+
+	return os.WriteFile(branchPath, []byte(commitHash+"\n"), 0644)
+}
+
+
+func (r* Repository) ListBranches() ([]string, string, error) {
+	var branches []string
+	headsDir := filepath.Join(r.GitDir, "refs", "heads")
+
+	entries, err := os.ReadDir(headsDir)
+	if err != nil {
+		return nil, "", err
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir(){
+			branches = append(branches, entry.Name())
+		}
+	}
+
+	current, _ := r.GetCurrentBranch()
+	return branches, current, nil
+}
