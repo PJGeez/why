@@ -2,6 +2,7 @@ package index
 
 import (
 	"encoding/json"
+	"git-from-scratch/internal/object"
 	"os"
 	"path/filepath"
 )
@@ -45,4 +46,39 @@ func WriteIndex(repoPath string, idx *Index) error {
 	}
 
 	return os.WriteFile(path, data, 0644)
+}
+
+
+func (idx* Index) FromTree(repoPath, treeHash, currentPath string) error {
+	data, err := object.ReadObject(repoPath, treeHash)
+	if err != nil {
+		return err
+	}
+
+	obj, err := object.ParseObject(data)
+	if err != nil {
+		return err
+	}
+
+	tree, err := object.ParseTree(obj.Content)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range tree.Entries {
+		relPath := filepath.Join(currentPath, entry.Name)
+		if entry.Mode == "040000" {
+			err := idx.FromTree(repoPath, entry.Hash, relPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			idx.Entries = append(idx.Entries, IndexEntry{
+				Path: relPath,
+				Hash: entry.Hash,
+				Mode: entry.Mode,
+			})
+		}
+	}
+	return nil
 }

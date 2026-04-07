@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"git-from-scratch/internal/index"
 	"git-from-scratch/internal/object"
 	"git-from-scratch/internal/repo"
 	"os"
 	"path/filepath"
 )
+
 
 // cleanupWorkingDir removes all files and directories in the worktree EXCEPT .why and project essentials
 func cleanupWorkingDir(repoPath string) error {
@@ -29,13 +31,14 @@ func cleanupWorkingDir(repoPath string) error {
 		} else {
 			removeErr = os.Remove(path)
 		}
-		
+
 		if removeErr != nil {
 			return fmt.Errorf("could not remove %s: %w", path, removeErr)
 		}
 	}
 	return nil
 }
+
 
 // UnpackTree recursively restores files and folders from a tree object
 func UnpackTree(repoPath, treeHash, currentPath string) error {
@@ -88,6 +91,7 @@ func UnpackTree(repoPath, treeHash, currentPath string) error {
 	return nil
 }
 
+
 // GetTreeFromCommit finds the tree hash associated with a given commit hash
 func GetTreeFromCommit(repoPath, commitHash string) (string, error) {
 	if commitHash == "" {
@@ -113,6 +117,7 @@ func GetTreeFromCommit(repoPath, commitHash string) (string, error) {
 	return commit.Tree, nil
 }
 
+
 func Checkout(repoPath, target string) error {
 	r := &repo.Repository{WorkTree: repoPath, GitDir: repoPath + "/.why"}
 
@@ -134,13 +139,22 @@ func Checkout(repoPath, target string) error {
 	}
 
 	// 4. Restore Files from the Tree (Phase 7.3)
+	newIdx := &index.Index{Entries: []index.IndexEntry{}}
 	if treeHash != "" {
 		if err := UnpackTree(repoPath, treeHash, repoPath); err != nil {
 			return fmt.Errorf("unpack failed: %w", err)
 		}
+		// 5. Sync Index (Phase 8.3)
+		if err := newIdx.FromTree(repoPath, treeHash, ""); err != nil {
+			return fmt.Errorf("index sync failed: %w", err)
+		}
 	}
 
-	// 5. Update HEAD (Phase 7.5)
+	if err := index.WriteIndex(repoPath, newIdx); err != nil {
+		return fmt.Errorf("could not write new index: %w", err)
+	}
+
+	// 6. Update HEAD (Phase 7.5)
 	if err := r.UpdateHead(target, isBranch); err != nil {
 		return err
 	}
