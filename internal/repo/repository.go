@@ -144,20 +144,36 @@ func (r* Repository) CreateBranch(name string, commitHash string) error {
 
 
 func (r* Repository) ListBranches() ([]string, string, error) {
-	var branches []string
-	headsDir := filepath.Join(r.GitDir, "refs", "heads")
+        var branches []string
+        headsDir := filepath.Join(r.GitDir, "refs", "heads")
 
-	entries, err := os.ReadDir(headsDir)
-	if err != nil {
-		return nil, "", err
-	}
+        entries, err := os.ReadDir(headsDir)
+        if err != nil && !os.IsNotExist(err) {
+                return nil, "", err
+        }
 
-	for _, entry := range entries {
-		if !entry.IsDir(){
-			branches = append(branches, entry.Name())
-		}
-	}
+        for _, entry := range entries {
+                if !entry.IsDir(){
+                        branches = append(branches, entry.Name())
+                }
+        }
 
-	current, _ := r.GetCurrentBranch()
-	return branches, current, nil
+        current, _ := r.GetCurrentBranch()
+
+        // If we are on a branch that doesn't have a file yet (like initial master),
+        // add it to the list if it's not already there.
+        if current != "" {
+            found := false
+            for _, b := range branches {
+                if b == current {
+                    found = true
+                    break
+                }
+            }
+            if !found {
+                branches = append(branches, current)
+            }
+        }
+
+        return branches, current, nil
 }

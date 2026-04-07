@@ -23,7 +23,8 @@ show_menu() {
     echo "4. Show Status"
     echo "5. Show Log"
     echo "6. Checkout (Time Travel)"
-    echo "7. Reset Test Repo (Wipe everything)"
+    echo "7. Create New Branch"
+    echo "8. Reset Test Repo (Wipe everything)"
     echo "q. Quit"
     echo "--------------------------------"
 }
@@ -56,6 +57,10 @@ while true; do
             ./why checkout "$target"
             ;;
         7)
+            read -p "New branch name: " bname
+            ./why branch "$bname"
+            ;;
+        8)
             rm -rf .why *
             cp ../why .
             echo "Test repo reset."
