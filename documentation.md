@@ -104,15 +104,17 @@ Checkout is the most dangerous and powerful command. It transforms the repositor
 ---
 
 ## Phase 8 — Branching & Multi-Timeline Development
-**Objective:** Manage parallel streams of work.
+**Objective:** Manage parallel streams of work and maintain state consistency.
 
 ### Milestones
 1.  **Branch Pointers:** Creating new files in `refs/heads/` that point to the current commit.
 2.  **Branch Listing:** Highlighting the active branch by comparing `HEAD` with the list of files in `refs/heads/`.
-3.  **Index Synchronization:** (Critical) Ensuring that `why checkout` updates the `.why/index` so that `why status` remains accurate after a switch.
+3.  **Index Synchronization (Phase 8.3):** Rebuilding the `.why/index` from the target tree during a `checkout`.
 
 ### Technical "Why"
-Branches are "Cheap References." Creating a branch in `why` (and Git) takes 0.001 seconds because it is just writing 40 bytes to a new text file. This enables the "Multiverse" model of development where features can be built in isolation.
+Branches are "Cheap References." Creating a branch in `why` (and Git) takes 0.001 seconds because it is just writing 40 bytes to a new text file. 
+
+**Index Synchronization** is the critical "Secret Sauce." Without it, checking out an old version would leave your staging area (the index) pointing to the *future* version, causing `why status` to show massive errors. By syncing the index, we ensure the "Golden Rule" is met: **Working Directory == Index == HEAD Commit Tree**.
 
 ---
 

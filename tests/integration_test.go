@@ -2,6 +2,7 @@ package tests
 
 import (
 	"git-from-scratch/cmd"
+	"git-from-scratch/internal/index"
 	"os"
 	"path/filepath"
 	"testing"
@@ -45,5 +46,26 @@ func TestFullWorkflow(t *testing.T) {
 	content, _ := os.ReadFile(fname)
 	if string(content) != "v1" {
 		t.Errorf("Checkout did not restore file correctly: expected v1, got %s", string(content))
+	}
+
+	// 5. Verify Index Sync (Phase 8.3)
+	idx, err := index.ReadIndex(".")
+	if err != nil {
+		t.Fatalf("Could not read index: %v", err)
+	}
+
+	found := false
+	for _, entry := range idx.Entries {
+		if entry.Path == fname {
+			found = true
+			// The hash in the index should match the content "v1"
+			if entry.Hash == "" {
+				t.Errorf("Index entry for %s has empty hash", fname)
+			}
+			break
+		}
+	}
+	if !found {
+		t.Errorf("Index was not synchronized after checkout: %s missing", fname)
 	}
 }
