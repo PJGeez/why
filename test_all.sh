@@ -18,13 +18,14 @@ show_menu() {
     echo "Current Branch: $(cat .why/HEAD 2>/dev/null || echo 'Not Init')"
     echo "--------------------------------"
     echo "1. Init Repository"
-    echo "2. Create/Add File"
-    echo "3. Commit Changes"
-    echo "4. Show Status"
-    echo "5. Show Log"
-    echo "6. Checkout (Time Travel)"
-    echo "7. Create New Branch"
-    echo "8. Reset Test Repo (Wipe everything)"
+    echo "2. Create/Modify File"
+    echo "3. Add File to Staging"
+    echo "4. Commit Changes"
+    echo "5. Show Status (Phase 9A Intelligent)"
+    echo "6. Show Log"
+    echo "7. Checkout (Time Travel)"
+    echo "8. Create New Branch"
+    echo "9. Reset Test Repo (Wipe everything)"
     echo "q. Quit"
     echo "--------------------------------"
 }
@@ -39,28 +40,32 @@ while true; do
         2)
             read -p "Filename: " fname
             read -p "Content: " content
-            echo "$content" > "$fname"
-            ./why add "$fname"
+            echo "$content" >> "$fname"
+            echo "Modified $fname"
             ;;
         3)
+            read -p "Filename to add: " fname
+            ./why add "$fname"
+            ;;
+        4)
             read -p "Commit message: " msg
             ./why commit -m "$msg"
             ;;
-        4)
+        5)
             ./why status
             ;;
-        5)
+        6)
             ./why log
             ;;
-        6)
+        7)
             read -p "Enter Target (branch or hash): " target
             ./why checkout "$target"
             ;;
-        7)
+        8)
             read -p "New branch name: " bname
             ./why branch "$bname"
             ;;
-        8)
+        9)
             rm -rf .why *
             cp ../why .
             echo "Test repo reset."
