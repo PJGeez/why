@@ -116,6 +116,11 @@ func main() {
 				fmt.Println("error:", err)
 			}
 			fmt.Println(hash)
+		case "diff":
+            err := cmd.Diff(".", os.Args[2:])
+            if err != nil {
+                fmt.Println("error:", err)
+            }
 
 		default:
 			fmt.Printf("unknown command: %s\n", command)

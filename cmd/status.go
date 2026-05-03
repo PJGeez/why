@@ -10,8 +10,8 @@ import (
 	"sort"
 )
 
-// Helper to load index entries into a map for fast comparison
-func loadIndexMap(idx *index.Index) map[string]string {
+// LoadIndexMap to load index entries into a map for fast comparison
+func LoadIndexMap(idx *index.Index) map[string]string {
 	m := make(map[string]string)
 	for _, entry := range idx.Entries {
 		m[entry.Path] = entry.Hash
@@ -19,8 +19,8 @@ func loadIndexMap(idx *index.Index) map[string]string {
 	return m
 }
 
-// Helper to recursively walk a tree object and build a map of paths to hashes
-func loadTreeMap(repoPath, treeHash, currentPath string, m map[string]string) error {
+// LoadTreeMap to recursively walk a tree object and build a map of paths to hashes
+func LoadTreeMap(repoPath, treeHash, currentPath string, m map[string]string) error {
 	if treeHash == "" {
 		return nil
 	}
@@ -43,7 +43,7 @@ func loadTreeMap(repoPath, treeHash, currentPath string, m map[string]string) er
 	for _, entry := range tree.Entries {
 		relPath := filepath.Join(currentPath, entry.Name)
 		if entry.Mode == "040000" { // Directory
-			if err := loadTreeMap(repoPath, entry.Hash, relPath, m); err != nil {
+			if err := LoadTreeMap(repoPath, entry.Hash, relPath, m); err != nil {
 				return err
 			}
 		} else { // File
@@ -53,8 +53,8 @@ func loadTreeMap(repoPath, treeHash, currentPath string, m map[string]string) er
 	return nil
 }
 
-// Helper to scan working directory and hash every file
-func scanWorkingDir(repoPath string) (map[string]string, error) {
+// ScanWorkingDir to scan working directory and hash every file
+func ScanWorkingDir(repoPath string) (map[string]string, error) {
 	m := make(map[string]string)
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -100,9 +100,9 @@ func Status(repoPath string) error {
 
 	// 2. Load the three snapshots
 	idx, _ := index.ReadIndex(repoPath)
-	indexMap := loadIndexMap(idx)
+	indexMap := LoadIndexMap(idx)
 
-	workingMap, err := scanWorkingDir(repoPath)
+	workingMap, err := ScanWorkingDir(repoPath)
 	if err != nil {
 		return fmt.Errorf("could not scan working directory: %w", err)
 	}
@@ -112,7 +112,7 @@ func Status(repoPath string) error {
 	if headCommit != "" {
 		treeHash, err := GetTreeFromCommit(repoPath, headCommit)
 		if err == nil {
-			loadTreeMap(repoPath, treeHash, "", headMap)
+			LoadTreeMap(repoPath, treeHash, "", headMap)
 		}
 	}
 
