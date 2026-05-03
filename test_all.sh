@@ -22,10 +22,12 @@ show_menu() {
     echo "3. Add File to Staging"
     echo "4. Commit Changes"
     echo "5. Show Status (Phase 9A Intelligent)"
-    echo "6. Show Log"
-    echo "7. Checkout (Time Travel)"
-    echo "8. Create New Branch"
-    echo "9. Reset Test Repo (Wipe everything)"
+    echo "6. Show Unstaged Diff (working vs index)"
+    echo "7. Show Staged Diff (index vs HEAD)"
+    echo "8. Show Log"
+    echo "9. Checkout (Time Travel)"
+    echo "10. Create New Branch"
+    echo "11. Reset Test Repo (Wipe everything)"
     echo "q. Quit"
     echo "--------------------------------"
 }
@@ -55,17 +57,23 @@ while true; do
             ./why status
             ;;
         6)
-            ./why log
+            ./why diff
             ;;
         7)
+            ./why diff --staged
+            ;;
+        8)
+            ./why log
+            ;;
+        9)
             read -p "Enter Target (branch or hash): " target
             ./why checkout "$target"
             ;;
-        8)
+        10)
             read -p "New branch name: " bname
             ./why branch "$bname"
             ;;
-        9)
+        11)
             rm -rf .why *
             cp ../why .
             echo "Test repo reset."
