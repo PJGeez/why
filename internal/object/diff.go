@@ -5,6 +5,14 @@ import (
 	"strings"
 )
 
+// ANSI Color Constants
+const (
+	ColorReset  = "\033[0m"
+	ColorRed    = "\033[31m"
+	ColorGreen  = "\033[32m"
+	ColorBold   = "\033[1m"
+)
+
 type Edit struct {
 	Type string // "EQUAL", "ADD", "DELETE"
 	Line string
@@ -15,7 +23,6 @@ type Edit struct {
 func DiffLines(a, b []string) []Edit {
 	m, n := len(a), len(b)
 	
-	// 1. Build the Dynamic Programming (DP) table
 	dp := make([][]int, m+1)
 	for i := range dp {
 		dp[i] = make([]int, n+1)
@@ -35,21 +42,17 @@ func DiffLines(a, b []string) []Edit {
 		}
 	}
 
-	// 2. Backtrack to find the path of edits
 	var edits []Edit
 	i, j := m, n
 	for i > 0 || j > 0 {
 		if i > 0 && j > 0 && a[i-1] == b[j-1] {
-			// Lines are identical
 			edits = append([]Edit{{Type: "EQUAL", Line: a[i-1]}}, edits...)
 			i--
 			j--
 		} else if j > 0 && (i == 0 || dp[i][j-1] >= dp[i-1][j]) {
-			// Line exists in new version but not in old (Addition)
 			edits = append([]Edit{{Type: "ADD", Line: b[j-1]}}, edits...)
 			j--
 		} else if i > 0 && (j == 0 || dp[i][j-1] < dp[i-1][j]) {
-			// Line exists in old version but not in new (Deletion)
 			edits = append([]Edit{{Type: "DELETE", Line: a[i-1]}}, edits...)
 			i--
 		}
@@ -57,11 +60,10 @@ func DiffLines(a, b []string) []Edit {
 	return edits
 }
 
-// GeneratePatch takes two raw file contents and returns a Git-style patch string (+ / -)
+// GeneratePatch takes two raw file contents and returns a colored patch string
 func GeneratePatch(a, b string) string {
 	var aLines, bLines []string
 	
-	// Split into lines while handling trailing newlines
 	if a != "" {
 		aLines = strings.Split(strings.TrimSuffix(a, "\n"), "\n")
 	}
@@ -77,9 +79,9 @@ func GeneratePatch(a, b string) string {
 		case "EQUAL":
 			patch.WriteString(fmt.Sprintf("  %s\n", edit.Line))
 		case "ADD":
-			patch.WriteString(fmt.Sprintf("+ %s\n", edit.Line))
+			patch.WriteString(fmt.Sprintf("%s+ %s%s\n", ColorGreen, edit.Line, ColorReset))
 		case "DELETE":
-			patch.WriteString(fmt.Sprintf("- %s\n", edit.Line))
+			patch.WriteString(fmt.Sprintf("%s- %s%s\n", ColorRed, edit.Line, ColorReset))
 		}
 	}
 	

@@ -10,6 +10,15 @@ import (
 	"sort"
 )
 
+// ANSI Color Constants
+const (
+	ColorReset  = "\033[0m"
+	ColorRed    = "\033[31m"
+	ColorGreen  = "\033[32m"
+	ColorBold   = "\033[1m"
+	ColorWhite  = "\033[37m"
+)
+
 // LoadIndexMap to load index entries into a map for fast comparison
 func LoadIndexMap(idx *index.Index) map[string]string {
 	m := make(map[string]string)
@@ -79,7 +88,6 @@ func ScanWorkingDir(repoPath string) (map[string]string, error) {
 			return err
 		}
 
-		// Hash using Git-style blob header to match index/storage
 		blob := object.Blob{Content: data}
 		hash := object.Hash(blob.Serialize())
 		m[relPath] = hash
@@ -91,14 +99,12 @@ func ScanWorkingDir(repoPath string) (map[string]string, error) {
 func Status(repoPath string) error {
 	r := &repo.Repository{WorkTree: repoPath, GitDir: filepath.Join(repoPath, ".why")}
 
-	// 1. Get current branch
 	branch, err := r.GetCurrentBranch()
 	if err != nil {
 		branch = "master"
 	}
 	fmt.Printf("On branch %s\n\n", branch)
 
-	// 2. Load the three snapshots
 	idx, _ := index.ReadIndex(repoPath)
 	indexMap := LoadIndexMap(idx)
 
@@ -116,8 +122,8 @@ func Status(repoPath string) error {
 		}
 	}
 
-	// 3. Changes to be committed (HEAD vs Index)
-	fmt.Println("Changes to be committed:")
+	// 1. Changes to be committed (HEAD vs Index) - GREEN
+	fmt.Printf("%sChanges to be committed:%s\n", ColorBold, ColorReset)
 	stagedChanges := false
 	var stagedKeys []string
 	stagedUnique := make(map[string]bool)
@@ -126,24 +132,25 @@ func Status(repoPath string) error {
 	sort.Strings(stagedKeys)
 
 	for _, path := range stagedKeys {
+		if seen := stagedUnique[path]; !seen { continue }
 		idxHash, inIndex := indexMap[path]
 		headHash, inHead := headMap[path]
 
 		if inIndex && !inHead {
-			fmt.Printf("  (staged)   new file:  %s\n", path)
+			fmt.Printf("  %snew file:  %s%s\n", ColorGreen, path, ColorReset)
 			stagedChanges = true
 		} else if inIndex && inHead && idxHash != headHash {
-			fmt.Printf("  (staged)   modified:  %s\n", path)
+			fmt.Printf("  %smodified:  %s%s\n", ColorGreen, path, ColorReset)
 			stagedChanges = true
 		} else if !inIndex && inHead {
-			fmt.Printf("  (staged)   deleted:   %s\n", path)
+			fmt.Printf("  %sdeleted:   %s%s\n", ColorGreen, path, ColorReset)
 			stagedChanges = true
 		}
 	}
 	if !stagedChanges { fmt.Println("  (none)") }
 
-	// 4. Changes not staged for commit (Index vs Working Dir)
-	fmt.Println("\nChanges not staged for commit:")
+	// 2. Changes not staged for commit (Index vs Working Dir) - RED
+	fmt.Printf("\n%sChanges not staged for commit:%s\n", ColorBold, ColorReset)
 	unstagedChanges := false
 	var unstagedKeys []string
 	unstagedUnique := make(map[string]bool)
@@ -156,17 +163,17 @@ func Status(repoPath string) error {
 		workHash, inWork := workingMap[path]
 
 		if inIndex && !inWork {
-			fmt.Printf("  (unstaged) deleted:   %s\n", path)
+			fmt.Printf("  %sdeleted:   %s%s\n", ColorRed, path, ColorReset)
 			unstagedChanges = true
 		} else if inIndex && inWork && workHash != idxHash {
-			fmt.Printf("  (unstaged) modified:  %s\n", path)
+			fmt.Printf("  %smodified:  %s%s\n", ColorRed, path, ColorReset)
 			unstagedChanges = true
 		}
 	}
 	if !unstagedChanges { fmt.Println("  (none)") }
 
-	// 5. Untracked files
-	fmt.Println("\nUntracked files:")
+	// 3. Untracked files - RED
+	fmt.Printf("\n%sUntracked files:%s\n", ColorBold, ColorReset)
 	untrackedFound := false
 	var workingKeys []string
 	for k := range workingMap { workingKeys = append(workingKeys, k) }
@@ -174,7 +181,7 @@ func Status(repoPath string) error {
 
 	for _, path := range workingKeys {
 		if _, inIndex := indexMap[path]; !inIndex {
-			fmt.Printf("  %s\n", path)
+			fmt.Printf("  %s%s%s\n", ColorRed, path, ColorReset)
 			untrackedFound = true
 		}
 	}
