@@ -171,23 +171,6 @@ This document is the definitive technical reference for the `why` version contro
 
 ---
 
-## Operational Guarantees
-Every architectural choice in this tool serves one goal: **State Integrity.** By ensuring the object database is content-addressable and the references are atomic, the system guarantees that history is immutable, verifiable, and permanent.
-
----
-
-## Phase 10 — The Reconciliation Engine (Merging)
-**Objective:** Deterministically reconcile two divergent states of history.
-
-### 10.1 — Graph Traversal & Merge Base
-*   **Objective:** Identify the Lowest Common Ancestor (LCA) of two commits.
-*   **Technical Why:** To merge two branches, you must first find the last point in history where they were identical. This provides the "Base" state for comparison.
-*   **The Algorithm:** Uses a Breadth-First Search (BFS) queue to walk backward through parent pointers until an intersection is found.
-
-### 10.2 — The Decision Matrix (Pure Engine)
-*   **Objective:** Reconcile three states (Base, Ours, Theirs) in memory.
-*   **Technical Why:** Separation of concerns. By calculating the "Merge Plan" before touching the disk, the system ensures that the merge is deterministic and can be safely aborted if errors occur.
-
 ### 10.3 — The Execution Pipeline (Mutation Layer)
 *   **Objective:** Apply the calculated merge plan to the physical files on disk.
 *   **Technical Why:** This is the materialization step. It automates the updating of files that changed in only one branch and deletes files that were removed.
@@ -195,3 +178,6 @@ Every architectural choice in this tool serves one goal: **State Integrity.** By
 ### 10.4 — Conflict Resolution Markers
 *   **Objective:** Generate human-readable conflict regions using `<<<<<<< HEAD` markers.
 *   **Technical Why:** When the engine cannot decide (because both branches changed the same file), it must safely halt and present both versions to the user, ensuring no data is lost during the merge.
+
+## Operational Guarantees
+Every architectural choice in this tool serves one goal: **State Integrity.** By ensuring the object database is content-addressable and the references are atomic, the system guarantees that history is immutable, verifiable, and permanent.
