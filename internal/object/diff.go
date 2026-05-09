@@ -87,3 +87,7 @@ func GeneratePatch(a, b string) string {
 	
 	return patch.String()
 }
+
+func GenerateConflictContent(ours, theirs string) string {
+	return fmt.Sprintf("<<<<<<< HEAD\n%s\n=======\n%s\n>>>>>>> MERGE_TARGET\n", ours, theirs)
+}
