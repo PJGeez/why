@@ -146,5 +146,30 @@ This document is the definitive technical reference for the `why` version contro
 
 ---
 
+## Phase 10 — The Reconciliation Engine (Merging)
+**Objective:** Deterministically reconcile two divergent states of history.
+
+### 10.1 — Graph Traversal & Merge Base
+*   **Objective:** Identify the Lowest Common Ancestor (LCA) of two commits.
+*   **Technical Why:** To merge two branches, you must first find the last point in history where they were identical. This provides the "Base" state. 
+*   **The Algorithm (BFS Queue):**
+    *   The engine uses a **Breadth-First Search (BFS)** with a queue to walk backward through parent pointers. 
+    *   **Why a Queue?** Using a queue makes the system "Merge-Aware." When we later support merge commits (which have multiple parents), the BFS logic can explore multiple branches of history simultaneously.
+
+### 10.2 — The Decision Matrix (Pure Engine)
+*   **Objective:** Reconcile three different states (Base, Ours, Theirs) without touching the disk.
+*   **Technical Why:** By separating the **computation** from the **execution**, the merge process becomes deterministic and highly testable. The engine produces a "Merge Plan" before a single file is written.
+*   **The Decision Matrix:**
+    | Comparison | Result | Logic |
+    | :--- | :--- | :--- |
+    | Ours == Base, Theirs == Base | **Keep Base** | No changes occurred anywhere. |
+    | Ours != Base, Theirs == Base | **Take Ours** | Change happened only in our timeline. |
+    | Theirs != Base, Ours == Base | **Take Theirs** | Change happened only in their timeline. |
+    | Ours != Base, Theirs != Base, Ours == Theirs | **Take Either** | Both branches made the identical change. |
+    | Ours != Base, Theirs != Base, Ours != Theirs | **CONFLICT** | Divergent changes detected. |
+*   **Constraint:** At this stage, any concurrent modification to the same file path results in a conflict (file-level merging).
+
+---
+
 ## Operational Guarantees
 Every architectural choice in this tool serves one goal: **State Integrity.** By ensuring the object database is content-addressable and the references are atomic, the system guarantees that history is immutable, verifiable, and permanent.
