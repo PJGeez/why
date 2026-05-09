@@ -119,7 +119,7 @@ func (r *Repository) UpdateHead(target string, isBranch bool) error {
 		content = target + "\n"
 	}
 
-	return os.WriteFile(headPath, []byte(content), 0644)
+	return os.WriteFile(headpath, []byte(content), 0644)
 }
 
 func (r *Repository) CreateBranch(name string, commitHash string) error {
@@ -180,7 +180,6 @@ func (r *Repository) GetCommit(hash string) (*object.Commit, error) {
 }
 
 func (r *Repository) FindMergeBase(hash1, hash2 string) (string, error) {
-	fmt.Printf("DEBUG: Finding Merge Base for %s and %s\n", hash1[:7], hash2[:7])
 	visited := make(map[string]bool)
 
 	queue1 := []string{hash1}
@@ -191,7 +190,6 @@ func (r *Repository) FindMergeBase(hash1, hash2 string) (string, error) {
 		if curr == "" || visited[curr] {
 			continue
 		}
-
 		visited[curr] = true
 
 		commitObj, err := r.GetCommit(curr)
@@ -199,7 +197,6 @@ func (r *Repository) FindMergeBase(hash1, hash2 string) (string, error) {
 			queue1 = append(queue1, commitObj.Parent)
 		}
 	}
-	fmt.Printf("DEBUG: Branch 1 traversal complete. Visited %d nodes.\n", len(visited))
 
 	visited2 := make(map[string]bool)
 	queue2 := []string{hash2}
@@ -213,7 +210,6 @@ func (r *Repository) FindMergeBase(hash1, hash2 string) (string, error) {
 		visited2[curr] = true
 
 		if visited[curr] {
-			fmt.Printf("DEBUG: Common ancestor found: %s\n", curr[:7])
 			return curr, nil
 		}
 
