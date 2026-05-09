@@ -119,7 +119,7 @@ func (r *Repository) UpdateHead(target string, isBranch bool) error {
 		content = target + "\n"
 	}
 
-	return os.WriteFile(headpath, []byte(content), 0644)
+	return os.WriteFile(headPath, []byte(content), 0644)
 }
 
 func (r *Repository) CreateBranch(name string, commitHash string) error {
