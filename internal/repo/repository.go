@@ -10,34 +10,32 @@ import (
 
 type Repository struct {
 	WorkTree string
-	GitDir string
+	GitDir   string
 }
 
-
-func NewRepository(worktree string) (*Repository, error){
+func NewRepository(worktree string) (*Repository, error) {
 	gitDir := filepath.Join(worktree, ".why")
 
 	if _, err := os.Stat(gitDir); err == nil {
 		return nil, fmt.Errorf("why repository already exists...")
 	}
 
-	return &Repository {
+	return &Repository{
 		WorkTree: worktree,
-		GitDir: gitDir,
+		GitDir:   gitDir,
 	}, nil
 }
 
-
 func (r *Repository) Init() error {
-	dirs := []string {
+	dirs := []string{
 		r.GitDir,
 		filepath.Join(r.GitDir, "objects"),
 		filepath.Join(r.GitDir, "refs"),
 		filepath.Join(r.GitDir, "refs", "heads"),
 	}
 
-	for _, dir := range dirs{
-		if err := os.Mkdir(dir, 0755); err!=nil {
+	for _, dir := range dirs {
+		if err := os.Mkdir(dir, 0755); err != nil {
 			return err
 		}
 	}
@@ -48,8 +46,7 @@ func (r *Repository) Init() error {
 	return os.WriteFile(headpath, headContent, 0644)
 }
 
-
-func (r *Repository) GetHeadCommit() (string, error){
+func (r *Repository) GetHeadCommit() (string, error) {
 	headPath := filepath.Join(r.GitDir, "HEAD")
 	data, err := os.ReadFile(headPath)
 	if err != nil {
@@ -64,17 +61,15 @@ func (r *Repository) GetHeadCommit() (string, error){
 		fullRefPath := filepath.Join(r.GitDir, refPath)
 		refData, err := os.ReadFile(fullRefPath)
 		if err != nil {
-			if os.IsNotExist(err){
+			if os.IsNotExist(err) {
 				return "", nil
 			}
 			return "", err
 		}
 		return strings.TrimSpace(string(refData)), nil
 	}
-	// detached HEAD contains the hash directly
 	return content, nil
 }
-
 
 func (r *Repository) GetCurrentBranch() (string, error) {
 	headPath := filepath.Join(r.GitDir, "HEAD")
@@ -91,49 +86,43 @@ func (r *Repository) GetCurrentBranch() (string, error) {
 	return "", fmt.Errorf("detached HEAD or unknown branch format")
 }
 
-
 func (r *Repository) SetBranchCommit(branch string, commitHash string) error {
 	refPath := filepath.Join(r.GitDir, "refs", "heads", branch)
 
-	if err := os.MkdirAll(filepath.Dir(refPath), 0755); err!=nil {
+	if err := os.MkdirAll(filepath.Dir(refPath), 0755); err != nil {
 		return err
 	}
 
 	return os.WriteFile(refPath, []byte(commitHash+"\n"), 0644)
 }
 
-
 func (r *Repository) ResolveTarget(target string) (string, bool, error) {
-        // checking if the branch is already present in the refs/heads
-        refPath := filepath.Join(r.GitDir, "refs", "heads", target)
-        if data, err := os.ReadFile(refPath); err == nil {
-                return strings.TrimSpace(string(data)), true, nil
-        }
+	refPath := filepath.Join(r.GitDir, "refs", "heads", target)
+	if data, err := os.ReadFile(refPath); err == nil {
+		return strings.TrimSpace(string(data)), true, nil
+	}
 
-        if len(target) == 40 {
-                return target, false, nil
-        }
+	if len(target) == 40 {
+		return target, false, nil
+	}
 
-        return "", false, fmt.Errorf("target '%s' is not a valid branch or a commit hash", target)
+	return "", false, fmt.Errorf("target '%s' is not a valid branch or a commit hash", target)
 }
 
+func (r *Repository) UpdateHead(target string, isBranch bool) error {
+	headPath := filepath.Join(r.GitDir, "HEAD")
+	var content string
 
-// UpdateHead function will cause the checkout possible it will point to the targeted branch
-func (r* Repository) UpdateHead(target string, isBranch bool) error {
-        headPath := filepath.Join(r.GitDir, "HEAD")
-        var content string
+	if isBranch {
+		content = fmt.Sprintf("ref: refs/heads/%s\n", target)
+	} else {
+		content = target + "\n"
+	}
 
-        if isBranch {
-                content = fmt.Sprintf("ref: refs/heads/%s\n", target)
-        } else {
-                content = target + "\n"
-        }
-
-        return os.WriteFile(headPath, []byte(content), 0644)
+	return os.WriteFile(headPath, []byte(content), 0644)
 }
 
-
-func (r* Repository) CreateBranch(name string, commitHash string) error {
+func (r *Repository) CreateBranch(name string, commitHash string) error {
 	branchPath := filepath.Join(r.GitDir, "refs", "heads", name)
 
 	if _, err := os.Stat(branchPath); err == nil {
@@ -143,45 +132,41 @@ func (r* Repository) CreateBranch(name string, commitHash string) error {
 	return os.WriteFile(branchPath, []byte(commitHash+"\n"), 0644)
 }
 
+func (r *Repository) ListBranches() ([]string, string, error) {
+	var branches []string
+	headsDir := filepath.Join(r.GitDir, "refs", "heads")
 
-func (r* Repository) ListBranches() ([]string, string, error) {
-        var branches []string
-        headsDir := filepath.Join(r.GitDir, "refs", "heads")
+	entries, err := os.ReadDir(headsDir)
+	if err != nil && !os.IsNotExist(err) {
+		return nil, "", err
+	}
 
-        entries, err := os.ReadDir(headsDir)
-        if err != nil && !os.IsNotExist(err) {
-                return nil, "", err
-        }
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			branches = append(branches, entry.Name())
+		}
+	}
 
-        for _, entry := range entries {
-                if !entry.IsDir(){
-                        branches = append(branches, entry.Name())
-                }
-        }
+	current, _ := r.GetCurrentBranch()
 
-        current, _ := r.GetCurrentBranch()
+	if current != "" {
+		found := false
+		for _, b := range branches {
+			if b == current {
+				found = true
+				break
+			}
+		}
+		if !found {
+			branches = append(branches, current)
+		}
+	}
 
-        // If we are on a branch that doesn't have a file yet (like initial master),
-        // add it to the list if it's not already there.
-        if current != "" {
-            found := false
-            for _, b := range branches {
-                if b == current {
-                    found = true
-                    break
-                }
-            }
-            if !found {
-                branches = append(branches, current)
-            }
-        }
-
-        return branches, current, nil
+	return branches, current, nil
 }
 
-
 func (r *Repository) GetCommit(hash string) (*object.Commit, error) {
-	data,err := object.ReadObject(r.WorkTree, hash)
+	data, err := object.ReadObject(r.WorkTree, hash)
 	if err != nil {
 		return nil, err
 	}
@@ -194,14 +179,14 @@ func (r *Repository) GetCommit(hash string) (*object.Commit, error) {
 	return object.ParseCommit(obj.Content)
 }
 
-
-func (r* Repository) FindMergeBase(hash1, hash2 string) (string, error) {
+func (r *Repository) FindMergeBase(hash1, hash2 string) (string, error) {
+	fmt.Printf("DEBUG: Finding Merge Base for %s and %s\n", hash1[:7], hash2[:7])
 	visited := make(map[string]bool)
 
 	queue1 := []string{hash1}
 	for len(queue1) > 0 {
 		curr := queue1[0]
-		queue1 := queue1[1:]
+		queue1 = queue1[1:]
 
 		if curr == "" || visited[curr] {
 			continue
@@ -210,29 +195,32 @@ func (r* Repository) FindMergeBase(hash1, hash2 string) (string, error) {
 		visited[curr] = true
 
 		commitObj, err := r.GetCommit(curr)
-		if err == nil {
-			if commitObj.Parent != "" {
-				queue1 = append(queue1, commitObj.Parent)
-			}
+		if err == nil && commitObj != nil && commitObj.Parent != "" {
+			queue1 = append(queue1, commitObj.Parent)
 		}
 	}
+	fmt.Printf("DEBUG: Branch 1 traversal complete. Visited %d nodes.\n", len(visited))
 
+	visited2 := make(map[string]bool)
 	queue2 := []string{hash2}
-	for len(queue2) > 0{
+	for len(queue2) > 0 {
 		curr := queue2[0]
 		queue2 = queue2[1:]
 
-		if curr == "" {
+		if curr == "" || visited2[curr] {
 			continue
 		}
-        if visited[curr] {
-            return curr, nil
-        }
+		visited2[curr] = true
 
-        commitObj, err := r.GetCommit(curr)
-        if err == nil && commitObj.Parent != "" {
-            queue2 = append(queue2, commitObj.Parent)
-        }
-    }
+		if visited[curr] {
+			fmt.Printf("DEBUG: Common ancestor found: %s\n", curr[:7])
+			return curr, nil
+		}
+
+		commitObj, err := r.GetCommit(curr)
+		if err == nil && commitObj != nil && commitObj.Parent != "" {
+			queue2 = append(queue2, commitObj.Parent)
+		}
+	}
 	return "", fmt.Errorf("no common ancestor found")
 }
