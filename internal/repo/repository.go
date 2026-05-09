@@ -2,6 +2,7 @@ package repo
 
 import (
 	"fmt"
+	"git-from-scratch/internal/object"
 	"os"
 	"path/filepath"
 	"strings"
@@ -176,4 +177,62 @@ func (r* Repository) ListBranches() ([]string, string, error) {
         }
 
         return branches, current, nil
+}
+
+
+func (r *Repository) GetCommit(hash string) (*object.Commit, error) {
+	data,err := object.ReadObject(r.WorkTree, hash)
+	if err != nil {
+		return nil, err
+	}
+
+	obj, err := object.ParseObject(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return object.ParseCommit(obj.Content)
+}
+
+
+func (r* Repository) FindMergeBase(hash1, hash2 string) (string, error) {
+	visited := make(map[string]bool)
+
+	queue1 := []string{hash1}
+	for len(queue1) > 0 {
+		curr := queue1[0]
+		queue1 := queue1[1:]
+
+		if curr == "" || visited[curr] {
+			continue
+		}
+
+		visited[curr] = true
+
+		commitObj, err := r.GetCommit(curr)
+		if err == nil {
+			if commitObj.Parent != "" {
+				queue1 = append(queue1, commitObj.Parent)
+			}
+		}
+	}
+
+	queue2 := []string{hash2}
+	for len(queue2) > 0{
+		curr := queue2[0]
+		queue2 = queue2[1:]
+
+		if curr == "" {
+			continue
+		}
+        if visited[curr] {
+            return curr, nil
+        }
+
+        commitObj, err := r.GetCommit(curr)
+        if err == nil && commitObj.Parent != "" {
+            queue2 = append(queue2, commitObj.Parent)
+        }
+    }
+	return "", fmt.Errorf("no common ancestor found")
 }
