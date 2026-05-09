@@ -117,11 +117,21 @@ func main() {
 			}
 			fmt.Println(hash)
 		case "diff":
-            err := cmd.Diff(".", os.Args[2:])
-            if err != nil {
-                fmt.Println("error:", err)
-            }
+			err := cmd.Diff(".", os.Args[2:])
+			if err != nil {
+				fmt.Println("error:", err)
+			}
 
+		case "merge":
+			if len(os.Args) < 3 {
+				fmt.Println("usage: why merge <branch>")
+				return
+			}
+			target := os.Args[2]
+			err := cmd.Merge(".", target)
+			if err != nil {
+				fmt.Println("error:", err)
+			}
 		default:
 			fmt.Printf("unknown command: %s\n", command)
 			os.Exit(1)
