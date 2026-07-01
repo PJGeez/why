@@ -12,7 +12,7 @@ func CatFile(repoPath, flag, hash string) error {
 	dir := hash[:2]
 	file := hash[2:]
 
-	path := repoPath + "/.why/objects" + dir + "/" + file
+	path := repoPath + "/.why/objects/" + dir + "/" + file
 
 	data, err := os.ReadFile(path)
 	if err != nil {
